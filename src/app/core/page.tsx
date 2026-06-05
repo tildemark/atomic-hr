@@ -37,6 +37,13 @@ interface Branch {
   region: string;
   isHeadquarters: boolean;
   address: string;
+  registeredTin?: string;
+  sssId?: string;
+  philhealthId?: string;
+  pagibigId?: string;
+  birBranchCode?: string;
+  rdoCode?: string;
+  entityType?: string;
 }
 
 interface Department {
@@ -138,7 +145,16 @@ function CoreSetupContent() {
     email: '',
     website: '',
     secRegistration: '',
+    sssId: '',
+    philhealthId: '',
+    pagibigId: '',
+    birBranchCode: '',
+    rdoCode: '',
+    companyType: 'OPERATING',
+    parentTenantId: '',
   });
+
+  const [allTenants, setAllTenants] = useState<any[]>([]);
 
   // Data Lists State
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -154,7 +170,19 @@ function CoreSetupContent() {
   // Modals Controlling State
   const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
-  const [branchForm, setBranchForm] = useState({ name: '', region: '', isHeadquarters: false, address: '' });
+  const [branchForm, setBranchForm] = useState({ 
+    name: '', 
+    region: '', 
+    isHeadquarters: false, 
+    address: '',
+    registeredTin: '',
+    sssId: '',
+    philhealthId: '',
+    pagibigId: '',
+    birBranchCode: '',
+    rdoCode: '',
+    entityType: 'BRANCH'
+  });
 
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
   const [editingDept, setEditingDept] = useState<Department | null>(null);
@@ -276,6 +304,12 @@ function CoreSetupContent() {
       .then(res => res.json())
       .then(data => setTenant(data))
       .catch(err => console.error('Error fetching tenant:', err));
+
+    // Fetch all tenants
+    fetch('/api/core/tenant?list=true')
+      .then(res => res.json())
+      .then(data => setAllTenants(data))
+      .catch(err => console.error('Error fetching list of tenants:', err));
 
     // Branches
     fetch('/api/core/branches')
@@ -592,6 +626,12 @@ function CoreSetupContent() {
       const data = await res.json();
       setTenant(data);
       triggerAlert('Tenant profile updated successfully');
+      
+      // Refresh list of tenants
+      fetch('/api/core/tenant?list=true')
+        .then(res => res.json())
+        .then(list => setAllTenants(list))
+        .catch(err => console.error('Error fetching list of tenants:', err));
     } catch (err) {
       console.error(err);
       triggerAlert('Failed to update tenant profile');
@@ -602,10 +642,34 @@ function CoreSetupContent() {
   const handleOpenBranchModal = (branch: Branch | null = null) => {
     if (branch) {
       setEditingBranch(branch);
-      setBranchForm({ name: branch.name, region: branch.region, isHeadquarters: branch.isHeadquarters, address: branch.address || '' });
+      setBranchForm({ 
+        name: branch.name, 
+        region: branch.region, 
+        isHeadquarters: branch.isHeadquarters, 
+        address: branch.address || '',
+        registeredTin: branch.registeredTin || '',
+        sssId: branch.sssId || '',
+        philhealthId: branch.philhealthId || '',
+        pagibigId: branch.pagibigId || '',
+        birBranchCode: branch.birBranchCode || '',
+        rdoCode: branch.rdoCode || '',
+        entityType: branch.entityType || 'BRANCH'
+      });
     } else {
       setEditingBranch(null);
-      setBranchForm({ name: '', region: '', isHeadquarters: false, address: '' });
+      setBranchForm({ 
+        name: '', 
+        region: '', 
+        isHeadquarters: false, 
+        address: '',
+        registeredTin: '',
+        sssId: '',
+        philhealthId: '',
+        pagibigId: '',
+        birBranchCode: '',
+        rdoCode: '',
+        entityType: 'BRANCH'
+      });
     }
     setIsBranchModalOpen(true);
   };
@@ -863,83 +927,198 @@ function CoreSetupContent() {
                       </div>
 
                       {/* Right: Grid of details */}
-                      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-1">
-                          <Label htmlFor="corporateName" className="text-xs text-slate-605 font-bold">Corporate Name</Label>
-                          <Input
-                            id="corporateName"
-                            value={tenant.corporateName || ''}
-                            onChange={(e) => setTenant({ ...tenant, corporateName: e.target.value })}
-                            className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
-                          />
+                      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-y-6 gap-x-4">
+                        {/* Subsection: General Information */}
+                        <div className="md:col-span-3">
+                          <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 mb-2.5">General Information</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-1">
+                              <Label htmlFor="corporateName" className="text-xs text-slate-605 font-bold">Corporate Name</Label>
+                              <Input
+                                id="corporateName"
+                                value={tenant.corporateName || ''}
+                                onChange={(e) => setTenant({ ...tenant, corporateName: e.target.value })}
+                                className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="industry" className="text-xs text-slate-605 font-bold">Industry Sector</Label>
+                              <Input
+                                id="industry"
+                                value={tenant.industry || ''}
+                                onChange={(e) => setTenant({ ...tenant, industry: e.target.value })}
+                                className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="secRegistration" className="text-xs text-slate-605 font-bold">SEC Registration Number</Label>
+                              <Input
+                                id="secRegistration"
+                                value={tenant.secRegistration || ''}
+                                onChange={(e) => setTenant({ ...tenant, secRegistration: e.target.value })}
+                                className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
+                                placeholder="e.g. SEC-CS201509876"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="companyType" className="text-xs text-slate-605 font-bold">Company Structure</Label>
+                              <Select 
+                                value={tenant.companyType || 'OPERATING'} 
+                                onValueChange={(val) => setTenant({ ...tenant, companyType: val || 'OPERATING' })}
+                              >
+                                <SelectTrigger id="companyType" className="bg-slate-50 border-slate-200 text-xs h-8">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white border border-slate-200 text-slate-700 text-xs">
+                                  <SelectItem value="OPERATING">Standalone Operating Company</SelectItem>
+                                  <SelectItem value="HOLDING">Parent Holding Company</SelectItem>
+                                  <SelectItem value="SUBSIDIARY">Subsidiary Company</SelectItem>
+                                  <SelectItem value="SISTER">Sister Company</SelectItem>
+                                  <SelectItem value="BRANCH">Branch / Division Company</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="parentTenantId" className="text-xs text-slate-605 font-bold">Parent Company / Head Office</Label>
+                              <Select 
+                                value={tenant.parentTenantId || 'none'} 
+                                onValueChange={(val) => setTenant({ ...tenant, parentTenantId: val === 'none' ? '' : (val || '') })}
+                                disabled={!['SUBSIDIARY', 'SISTER', 'BRANCH'].includes(tenant.companyType || '')}
+                              >
+                                <SelectTrigger id="parentTenantId" className="bg-slate-50 border-slate-200 text-xs h-8">
+                                  <SelectValue placeholder="Select parent entity..." />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white border border-slate-200 text-slate-700 text-xs">
+                                  <SelectItem value="none">None / Independent</SelectItem>
+                                  {allTenants
+                                    .filter(t => t.id !== tenant.id)
+                                    .map(t => (
+                                      <SelectItem key={t.id} value={t.id}>{t.corporateName}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
                         </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="registeredTin" className="text-xs text-slate-605 font-bold">Registered TIN</Label>
-                          <Input
-                            id="registeredTin"
-                            value={tenant.registeredTin || ''}
-                            onChange={(e) => setTenant({ ...tenant, registeredTin: e.target.value })}
-                            className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
-                          />
+
+                        {/* Subsection: Tax Information */}
+                        <div className="md:col-span-3 border-t border-slate-100 pt-4">
+                          <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 mb-2.5">Tax Registration (TIN / BIR / RDO)</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-1">
+                              <Label htmlFor="registeredTin" className="text-xs text-slate-605 font-bold">Registered TIN</Label>
+                              <Input
+                                id="registeredTin"
+                                value={tenant.registeredTin || ''}
+                                onChange={(e) => setTenant({ ...tenant, registeredTin: e.target.value })}
+                                className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="birBranchCode" className="text-xs text-slate-605 font-bold">BIR Branch Code</Label>
+                              <Input
+                                id="birBranchCode"
+                                value={tenant.birBranchCode || ''}
+                                onChange={(e) => setTenant({ ...tenant, birBranchCode: e.target.value })}
+                                className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
+                                placeholder="e.g. 00000"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="rdoCode" className="text-xs text-slate-605 font-bold">RDO Code</Label>
+                              <Input
+                                id="rdoCode"
+                                value={tenant.rdoCode || ''}
+                                onChange={(e) => setTenant({ ...tenant, rdoCode: e.target.value })}
+                                className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
+                                placeholder="e.g. 047"
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="secRegistration" className="text-xs text-slate-605 font-bold">SEC Registration Number</Label>
-                          <Input
-                            id="secRegistration"
-                            value={tenant.secRegistration || ''}
-                            onChange={(e) => setTenant({ ...tenant, secRegistration: e.target.value })}
-                            className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
-                            placeholder="e.g. SEC-CS201509876"
-                          />
+
+                        {/* Subsection: Statutory Benefits */}
+                        <div className="md:col-span-3 border-t border-slate-100 pt-4">
+                          <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 mb-2.5">Statutory Identifiers (SSS / PhilHealth / Pag-IBIG)</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-1">
+                              <Label htmlFor="sssId" className="text-xs text-slate-605 font-bold">SSS Employer Number</Label>
+                              <Input
+                                id="sssId"
+                                value={tenant.sssId || ''}
+                                onChange={(e) => setTenant({ ...tenant, sssId: e.target.value })}
+                                className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
+                                placeholder="e.g. 03-9123456-7"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="philhealthId" className="text-xs text-slate-605 font-bold">PhilHealth Number (PEN)</Label>
+                              <Input
+                                id="philhealthId"
+                                value={tenant.philhealthId || ''}
+                                onChange={(e) => setTenant({ ...tenant, philhealthId: e.target.value })}
+                                className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
+                                placeholder="e.g. 01-023456789-1"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="pagibigId" className="text-xs text-slate-605 font-bold">Pag-IBIG Employer ID</Label>
+                              <Input
+                                id="pagibigId"
+                                value={tenant.pagibigId || ''}
+                                onChange={(e) => setTenant({ ...tenant, pagibigId: e.target.value })}
+                                className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
+                                placeholder="e.g. 1210-9876-5432"
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="industry" className="text-xs text-slate-605 font-bold">Industry Sector</Label>
-                          <Input
-                            id="industry"
-                            value={tenant.industry || ''}
-                            onChange={(e) => setTenant({ ...tenant, industry: e.target.value })}
-                            className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="telephone" className="text-xs text-slate-605 font-bold">Telephone Number</Label>
-                          <Input
-                            id="telephone"
-                            value={tenant.telephone || ''}
-                            onChange={(e) => setTenant({ ...tenant, telephone: e.target.value })}
-                            className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
-                            placeholder="e.g. +63 (2) 8888-1234"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="email" className="text-xs text-slate-605 font-bold">Corporate Email</Label>
-                          <Input
-                            id="email"
-                            value={tenant.email || ''}
-                            onChange={(e) => setTenant({ ...tenant, email: e.target.value })}
-                            className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
-                            placeholder="e.g. info@company.com"
-                          />
-                        </div>
-                        <div className="space-y-1 md:col-span-2">
-                          <Label htmlFor="website" className="text-xs text-slate-605 font-bold">Company Website URL</Label>
-                          <Input
-                            id="website"
-                            value={tenant.website || ''}
-                            onChange={(e) => setTenant({ ...tenant, website: e.target.value })}
-                            className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
-                            placeholder="e.g. https://www.company.com"
-                          />
-                        </div>
-                        <div className="space-y-1 md:col-span-3">
-                          <Label htmlFor="address" className="text-xs text-slate-605 font-bold">Registered Corporate Address</Label>
-                          <textarea
-                            id="address"
-                            value={tenant.address || ''}
-                            onChange={(e) => setTenant({ ...tenant, address: e.target.value })}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none min-h-[80px]"
-                            placeholder="Enter full multiline address..."
-                          />
+
+                        {/* Subsection: Contact & Location */}
+                        <div className="md:col-span-3 border-t border-slate-100 pt-4">
+                          <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 mb-2.5">Contact & Location</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-1">
+                              <Label htmlFor="telephone" className="text-xs text-slate-605 font-bold">Telephone Number</Label>
+                              <Input
+                                id="telephone"
+                                value={tenant.telephone || ''}
+                                onChange={(e) => setTenant({ ...tenant, telephone: e.target.value })}
+                                className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
+                                placeholder="e.g. +63 (2) 8888-1234"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="email" className="text-xs text-slate-605 font-bold">Corporate Email</Label>
+                              <Input
+                                id="email"
+                                value={tenant.email || ''}
+                                onChange={(e) => setTenant({ ...tenant, email: e.target.value })}
+                                className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
+                                placeholder="e.g. info@company.com"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="website" className="text-xs text-slate-605 font-bold">Company Website URL</Label>
+                              <Input
+                                id="website"
+                                value={tenant.website || ''}
+                                onChange={(e) => setTenant({ ...tenant, website: e.target.value })}
+                                className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900 focus:bg-white"
+                                placeholder="e.g. https://www.company.com"
+                              />
+                            </div>
+                            <div className="space-y-1 md:col-span-3">
+                              <Label htmlFor="address" className="text-xs text-slate-605 font-bold">Registered Corporate Address</Label>
+                              <textarea
+                                id="address"
+                                value={tenant.address || ''}
+                                onChange={(e) => setTenant({ ...tenant, address: e.target.value })}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none min-h-[80px]"
+                                placeholder="Enter full multiline address..."
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -957,15 +1136,15 @@ function CoreSetupContent() {
               <Card className="bg-white border-slate-200 shadow-2xs">
                 <CardHeader className="flex flex-row items-center justify-between pb-3">
                   <div>
-                    <CardTitle className="text-base font-bold text-slate-900">Branch Offices</CardTitle>
-                    <CardDescription className="text-xs text-slate-400">Manage operations hubs and geographical regions.</CardDescription>
+                    <CardTitle className="text-base font-bold text-slate-900">Associated Entities & Branches</CardTitle>
+                    <CardDescription className="text-xs text-slate-400">Manage company branches, subsidiaries, sister companies, and affiliate structures.</CardDescription>
                   </div>
                   <Button
                     onClick={() => handleOpenBranchModal()}
                     className="bg-indigo-600 hover:bg-indigo-505 text-white font-semibold text-xs px-3 h-8 rounded-lg flex items-center gap-1.5 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    New Branch
+                    New Entity / Branch
                   </Button>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -973,7 +1152,7 @@ function CoreSetupContent() {
                   <div className="relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                     <Input
-                      placeholder="Search branches..."
+                      placeholder="Search associated entities..."
                       value={branchSearch}
                       onChange={(e) => setBranchSearch(e.target.value)}
                       className="pl-8 bg-slate-50 border-slate-200 text-xs h-8"
@@ -984,7 +1163,7 @@ function CoreSetupContent() {
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-200 text-[10px] uppercase font-bold tracking-wider text-slate-455">
-                          <th className="px-4 py-2.5">Branch Name</th>
+                          <th className="px-4 py-2.5">Entity / Branch Name</th>
                           <th className="px-4 py-2.5">Geographical Region</th>
                           <th className="px-4 py-2.5">Physical Address</th>
                           <th className="px-4 py-2.5">HQ Status</th>
@@ -994,7 +1173,21 @@ function CoreSetupContent() {
                       <tbody className="divide-y divide-slate-100 text-xs">
                         {filteredBranches.map((branch) => (
                           <tr key={branch.id} className="hover:bg-slate-50/50">
-                            <td className="px-4 py-3 font-semibold text-slate-800">{branch.name}</td>
+                            <td className="px-4 py-3 font-semibold text-slate-800">
+                              <div className="flex flex-col gap-1">
+                                <span className="font-semibold text-slate-805">{branch.name}</span>
+                                <span className={`self-start text-[9px] px-1.5 py-0.5 rounded-md font-bold tracking-wider uppercase border ${
+                                  branch.entityType === 'SUBSIDIARY' ? 'bg-purple-50 text-purple-700 border-purple-200/50' :
+                                  branch.entityType === 'SISTER_COMPANY' ? 'bg-blue-50 text-blue-700 border-blue-200/50' :
+                                  branch.entityType === 'AFFILIATE' ? 'bg-amber-50 text-amber-705 border-amber-200/50' :
+                                  'bg-slate-50 text-slate-700 border-slate-200'
+                                }`}>
+                                  {branch.entityType === 'SISTER_COMPANY' ? 'Sister Company' :
+                                   branch.entityType === 'SUBSIDIARY' ? 'Subsidiary' :
+                                   branch.entityType === 'AFFILIATE' ? 'Affiliate' : 'Branch'}
+                                </span>
+                              </div>
+                            </td>
                             <td className="px-4 py-3 text-slate-550">{branch.region || '—'}</td>
                             <td className="px-4 py-3 text-slate-500 font-medium truncate max-w-[200px]" title={branch.address}>
                               {branch.address || '—'}
@@ -2145,49 +2338,136 @@ function CoreSetupContent() {
 
       {/* --- BRANCH DIALOG --- */}
       <Dialog open={isBranchModalOpen} onOpenChange={setIsBranchModalOpen}>
-        <DialogContent className="bg-white border border-slate-200 text-slate-750 sm:max-w-[420px] rounded-xl shadow-lg">
+        <DialogContent className="bg-white border border-slate-200 text-slate-755 sm:max-w-[560px] rounded-xl shadow-lg">
           <DialogHeader>
             <CardTitle className="text-base font-bold text-slate-900">
-              {editingBranch ? 'Edit Branch' : 'Add New Branch'}
+              {editingBranch ? 'Edit Associated Entity / Branch' : 'Add New Associated Entity / Branch'}
             </CardTitle>
             <CardDescription className="text-xs text-slate-400">
-              Configure operations region and headquarters setting.
+              Configure classification, operations region, address, and statutory details.
             </CardDescription>
           </DialogHeader>
-          <form onSubmit={handleSaveBranch} className="space-y-4 py-2">
-            <div className="space-y-1">
-              <Label htmlFor="branch-name" className="text-xs text-slate-700">Branch Name</Label>
-              <Input
-                id="branch-name"
-                required
-                value={branchForm.name}
-                onChange={(e) => setBranchForm({ ...branchForm, name: e.target.value })}
-                placeholder="e.g. Cebu Branch"
-                className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900"
-              />
+          <form onSubmit={handleSaveBranch} className="space-y-4 py-1">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="branch-name" className="text-xs text-slate-700 font-semibold">Entity / Branch Name</Label>
+                <Input
+                  id="branch-name"
+                  required
+                  value={branchForm.name}
+                  onChange={(e) => setBranchForm({ ...branchForm, name: e.target.value })}
+                  placeholder="e.g. Cebu Branch"
+                  className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="branch-region" className="text-xs text-slate-700 font-semibold">Geographical Region</Label>
+                <Input
+                  id="branch-region"
+                  required
+                  value={branchForm.region}
+                  onChange={(e) => setBranchForm({ ...branchForm, region: e.target.value })}
+                  placeholder="e.g. Visayas"
+                  className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="branch-entity-type" className="text-xs text-slate-700 font-semibold">Structure Type</Label>
+                <Select
+                  value={branchForm.entityType || 'BRANCH'}
+                  onValueChange={(val) => setBranchForm({ ...branchForm, entityType: val || 'BRANCH' })}
+                >
+                  <SelectTrigger id="branch-entity-type" className="bg-slate-50 border-slate-200 text-xs h-8 text-slate-900">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-slate-200 text-slate-700 text-xs">
+                    <SelectItem value="BRANCH">Branch</SelectItem>
+                    <SelectItem value="SUBSIDIARY">Subsidiary</SelectItem>
+                    <SelectItem value="SISTER_COMPANY">Sister Company</SelectItem>
+                    <SelectItem value="AFFILIATE">Affiliate</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="branch-region" className="text-xs text-slate-700">Geographical Region</Label>
-              <Input
-                id="branch-region"
-                required
-                value={branchForm.region}
-                onChange={(e) => setBranchForm({ ...branchForm, region: e.target.value })}
-                placeholder="e.g. Visayas"
-                className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900"
-              />
+
+            {/* Subsection: Statutory & Tax Identifiers */}
+            <div className="border-t border-slate-100 pt-3 space-y-3">
+              <h5 className="text-[9px] font-extrabold uppercase tracking-wider text-indigo-600">Statutory & Tax Identifiers</h5>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="branch-tin" className="text-xs text-slate-700">Registered TIN</Label>
+                  <Input
+                    id="branch-tin"
+                    value={branchForm.registeredTin}
+                    onChange={(e) => setBranchForm({ ...branchForm, registeredTin: e.target.value })}
+                    placeholder="e.g. 123-456-789-001"
+                    className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="branch-bir" className="text-xs text-slate-700">BIR Branch Code</Label>
+                  <Input
+                    id="branch-bir"
+                    value={branchForm.birBranchCode}
+                    onChange={(e) => setBranchForm({ ...branchForm, birBranchCode: e.target.value })}
+                    placeholder="e.g. 00001"
+                    className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="branch-rdo" className="text-xs text-slate-700">RDO Code</Label>
+                  <Input
+                    id="branch-rdo"
+                    value={branchForm.rdoCode}
+                    onChange={(e) => setBranchForm({ ...branchForm, rdoCode: e.target.value })}
+                    placeholder="e.g. 083"
+                    className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="branch-sss" className="text-xs text-slate-700">SSS Employer Number</Label>
+                  <Input
+                    id="branch-sss"
+                    value={branchForm.sssId}
+                    onChange={(e) => setBranchForm({ ...branchForm, sssId: e.target.value })}
+                    placeholder="e.g. 03-9123456-8"
+                    className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="branch-philhealth" className="text-xs text-slate-700">PhilHealth PEN</Label>
+                  <Input
+                    id="branch-philhealth"
+                    value={branchForm.philhealthId}
+                    onChange={(e) => setBranchForm({ ...branchForm, philhealthId: e.target.value })}
+                    placeholder="e.g. 01-023456789-2"
+                    className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="branch-pagibig" className="text-xs text-slate-700">Pag-IBIG Employer ID</Label>
+                  <Input
+                    id="branch-pagibig"
+                    value={branchForm.pagibigId}
+                    onChange={(e) => setBranchForm({ ...branchForm, pagibigId: e.target.value })}
+                    placeholder="e.g. 1210-9876-5433"
+                    className="bg-slate-50 border-slate-200 text-xs py-1 h-8 text-slate-900"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="space-y-1">
+
+            <div className="space-y-1 border-t border-slate-100 pt-3">
               <Label htmlFor="branch-address" className="text-xs text-slate-700">Branch Address</Label>
               <textarea
                 id="branch-address"
                 value={branchForm.address}
                 onChange={(e) => setBranchForm({ ...branchForm, address: e.target.value })}
                 placeholder="Enter full multiline address..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs focus:bg-white focus:outline-none min-h-[60px] text-slate-800"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs focus:bg-white focus:outline-none min-h-[50px] text-slate-800"
               />
             </div>
-            <div className="flex items-center gap-2 pt-2">
+            <div className="flex items-center gap-2 pt-1">
               <input
                 type="checkbox"
                 id="branch-hq"
@@ -2202,7 +2482,7 @@ function CoreSetupContent() {
                 Cancel
               </Button>
               <Button type="submit" className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs py-1 h-8">
-                {editingBranch ? 'Apply Changes' : 'Save Branch'}
+                {editingBranch ? 'Apply Changes' : 'Save Entity / Branch'}
               </Button>
             </DialogFooter>
           </form>

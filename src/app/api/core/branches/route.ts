@@ -8,6 +8,13 @@ let mockBranches = [
     region: 'Metro Manila', 
     isHeadquarters: true, 
     address: 'ACME Tower, 12th Floor,\nSen. Gil Puyat Ave, Bel-Air,\nMakati City, 1209 Metro Manila',
+    registeredTin: '123-456-789-000',
+    sssId: '03-9123456-7',
+    philhealthId: '01-023456789-1',
+    pagibigId: '1210-9876-5432',
+    birBranchCode: '00000',
+    rdoCode: '047',
+    entityType: 'BRANCH',
     createdAt: new Date().toISOString() 
   },
   { 
@@ -16,6 +23,13 @@ let mockBranches = [
     region: 'Visayas', 
     isHeadquarters: false, 
     address: 'HM Tower, 7th Floor,\nGeonzon St, Cebu IT Park,\nLahug, Cebu City, 6000 Cebu',
+    registeredTin: '123-456-789-001',
+    sssId: '03-9123456-8',
+    philhealthId: '01-023456789-2',
+    pagibigId: '1210-9876-5433',
+    birBranchCode: '00001',
+    rdoCode: '083',
+    entityType: 'SUBSIDIARY',
     createdAt: new Date().toISOString() 
   },
   { 
@@ -24,6 +38,13 @@ let mockBranches = [
     region: 'Mindanao', 
     isHeadquarters: false, 
     address: 'Damosa Gateway, Tower B,\nLanang, Davao City, 8000 Davao del Sur',
+    registeredTin: '123-456-789-002',
+    sssId: '03-9123456-9',
+    philhealthId: '01-023456789-3',
+    pagibigId: '1210-9876-5434',
+    birBranchCode: '00002',
+    rdoCode: '113',
+    entityType: 'SISTER_COMPANY',
     createdAt: new Date().toISOString() 
   },
 ];
@@ -35,7 +56,7 @@ export async function GET() {
     });
     
     if (branches.length > 0) {
-      // Map database results and attach mock address properties if database fields are missing
+      // Map database results and attach mock properties if database fields are missing
       return NextResponse.json(branches.map((b: any) => {
         const found = mockBranches.find(mb => mb.id === b.id);
         return {
@@ -43,7 +64,14 @@ export async function GET() {
           name: b.name,
           region: b.region,
           isHeadquarters: b.isHeadquarters,
-          address: found?.address || 'Philippine Office Location Address',
+          address: b.address || found?.address || 'Philippine Office Location Address',
+          registeredTin: b.registeredTin || found?.registeredTin || '',
+          sssId: b.sssId || found?.sssId || '',
+          philhealthId: b.philhealthId || found?.philhealthId || '',
+          pagibigId: b.pagibigId || found?.pagibigId || '',
+          birBranchCode: b.birBranchCode || found?.birBranchCode || '',
+          rdoCode: b.rdoCode || found?.rdoCode || '',
+          entityType: b.entityType || found?.entityType || 'BRANCH',
           createdAt: b.createdAt,
         };
       }));
@@ -58,7 +86,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, region, isHeadquarters, address } = body;
+    const { name, region, isHeadquarters, address, registeredTin, sssId, philhealthId, pagibigId, birBranchCode, rdoCode, entityType } = body;
 
     if (!name) {
       return NextResponse.json({ error: 'Branch name is required' }, { status: 400 });
@@ -76,6 +104,13 @@ export async function POST(request: NextRequest) {
           name,
           region,
           isHeadquarters: !!isHeadquarters,
+          registeredTin,
+          sssId,
+          philhealthId,
+          pagibigId,
+          birBranchCode,
+          rdoCode,
+          entityType: entityType || 'BRANCH',
         },
       });
       return NextResponse.json({
@@ -84,6 +119,13 @@ export async function POST(request: NextRequest) {
         region: newBranch.region,
         isHeadquarters: newBranch.isHeadquarters,
         address: address || 'No address specified',
+        registeredTin: newBranch.registeredTin,
+        sssId: newBranch.sssId,
+        philhealthId: newBranch.philhealthId,
+        pagibigId: newBranch.pagibigId,
+        birBranchCode: newBranch.birBranchCode,
+        rdoCode: newBranch.rdoCode,
+        entityType: newBranch.entityType,
         createdAt: newBranch.createdAt,
       });
     } catch (dbError) {
@@ -97,6 +139,13 @@ export async function POST(request: NextRequest) {
         region,
         isHeadquarters: !!isHeadquarters,
         address: address || '',
+        registeredTin: registeredTin || '',
+        sssId: sssId || '',
+        philhealthId: philhealthId || '',
+        pagibigId: pagibigId || '',
+        birBranchCode: birBranchCode || '',
+        rdoCode: rdoCode || '',
+        entityType: entityType || 'BRANCH',
         createdAt: new Date().toISOString(),
       };
       mockBranches.push(newMock);
@@ -110,7 +159,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, name, region, isHeadquarters, address } = body;
+    const { id, name, region, isHeadquarters, address, registeredTin, sssId, philhealthId, pagibigId, birBranchCode, rdoCode, entityType } = body;
 
     if (!id || !name) {
       return NextResponse.json({ error: 'Branch ID and name are required' }, { status: 400 });
@@ -125,7 +174,18 @@ export async function PUT(request: NextRequest) {
       
       const updated = await prisma.branch.update({
         where: { id },
-        data: { name, region, isHeadquarters: !!isHeadquarters },
+        data: { 
+          name, 
+          region, 
+          isHeadquarters: !!isHeadquarters,
+          registeredTin,
+          sssId,
+          philhealthId,
+          pagibigId,
+          birBranchCode,
+          rdoCode,
+          entityType: entityType || 'BRANCH',
+        },
       });
       return NextResponse.json({
         id: updated.id,
@@ -133,6 +193,13 @@ export async function PUT(request: NextRequest) {
         region: updated.region,
         isHeadquarters: updated.isHeadquarters,
         address: address || 'No address specified',
+        registeredTin: updated.registeredTin,
+        sssId: updated.sssId,
+        philhealthId: updated.philhealthId,
+        pagibigId: updated.pagibigId,
+        birBranchCode: updated.birBranchCode,
+        rdoCode: updated.rdoCode,
+        entityType: updated.entityType,
       });
     } catch (dbError) {
       console.warn('Prisma update failed. Updating mock branch.');
@@ -140,10 +207,23 @@ export async function PUT(request: NextRequest) {
         mockBranches = mockBranches.map(b => ({ ...b, isHeadquarters: false }));
       }
       mockBranches = mockBranches.map(b => 
-        b.id === id ? { ...b, name, region, isHeadquarters: !!isHeadquarters, address: address || b.address } : b
+        b.id === id ? { 
+          ...b, 
+          name, 
+          region, 
+          isHeadquarters: !!isHeadquarters, 
+          address: address || b.address,
+          registeredTin: registeredTin ?? b.registeredTin,
+          sssId: sssId ?? b.sssId,
+          philhealthId: philhealthId ?? b.philhealthId,
+          pagibigId: pagibigId ?? b.pagibigId,
+          birBranchCode: birBranchCode ?? b.birBranchCode,
+          rdoCode: rdoCode ?? b.rdoCode,
+          entityType: entityType ?? b.entityType,
+        } : b
       );
       const updatedMock = mockBranches.find(b => b.id === id);
-      return NextResponse.json(updatedMock || { id, name, region, isHeadquarters, address });
+      return NextResponse.json(updatedMock || { id, name, region, isHeadquarters, address, registeredTin, sssId, philhealthId, pagibigId, birBranchCode, rdoCode, entityType });
     }
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 400 });

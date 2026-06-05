@@ -11,6 +11,15 @@ model Tenant {
   corporateName  String         @map("corporate_name") @db.VarChar(255)
   registeredTin  String?        @unique @map("registered_tin") @db.VarChar(50)
   industry       String?        @db.VarChar(100)
+  sssId          String?        @map("sss_id") @db.VarChar(50)
+  philhealthId   String?        @map("philhealth_id") @db.VarChar(50)
+  pagibigId      String?        @map("pagibig_id") @db.VarChar(50)
+  birBranchCode  String?        @map("bir_branch_code") @db.VarChar(10)
+  rdoCode        String?        @map("rdo_code") @db.VarChar(10)
+  companyType    String?        @default("OPERATING") @map("company_type") @db.VarChar(50)
+  parentTenantId String?        @map("parent_tenant_id") @db.Uuid
+  parentTenant   Tenant?        @relation("CorporateHierarchy", fields: [parentTenantId], references: [id], onDelete: SetNull)
+  subsidiaries   Tenant[]       @relation("CorporateHierarchy")
   createdAt      DateTime?      @default(now()) @map("created_at") @db.Timestamptz(6)
   
   license        TenantLicense?
@@ -47,6 +56,13 @@ model Branch {
   name           String       @db.VarChar(150)
   region         String?      @db.VarChar(100)
   isHeadquarters Boolean?     @default(false) @map("is_headquarters")
+  registeredTin  String?        @map("registered_tin") @db.VarChar(50)
+  sssId          String?        @map("sss_id") @db.VarChar(50)
+  philhealthId   String?        @map("philhealth_id") @db.VarChar(50)
+  pagibigId      String?        @map("pagibig_id") @db.VarChar(50)
+  birBranchCode  String?        @map("bir_branch_code") @db.VarChar(10)
+  rdoCode        String?        @map("rdo_code") @db.VarChar(10)
+  entityType     String?        @default("BRANCH") @map("entity_type") @db.VarChar(50)
   createdAt      DateTime?    @default(now()) @map("created_at") @db.Timestamptz(6)
   
   tenant         Tenant?      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
