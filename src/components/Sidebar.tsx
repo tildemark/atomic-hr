@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { 
   Users, 
   Clock, 
@@ -10,20 +10,48 @@ import {
   Search,
   Settings,
   HelpCircle,
-  Cpu
+  Cpu,
+  Building2,
+  LayoutGrid,
+  Sliders,
+  Database,
+  ShieldCheck,
+  ShieldAlert
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 
 export default function Sidebar() {
+  return (
+    <Suspense fallback={<div className="w-60 bg-white border-r border-slate-200 shrink-0"></div>}>
+      <SidebarContent />
+    </Suspense>
+  );
+}
+
+function SidebarContent() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeSection = searchParams.get('section') || 'company';
 
   const menuItems = [
     { name: 'Core Setup', href: '/core', icon: Settings },
     { name: 'HRIS Directory', href: '/hris', icon: Users },
     { name: 'Timekeeping', href: '/timekeeping', icon: Clock },
     { name: 'Payroll', href: '/payroll', icon: CircleDollarSign },
+  ];
+
+  const coreSubItems = [
+    { name: 'Company Setup', href: '/core?section=company', key: 'company', icon: Building2 },
+    { name: 'Departments Setup', href: '/core?section=departments', key: 'departments', icon: LayoutGrid },
+    { name: 'Users', href: '/core?section=users', key: 'users', icon: Users },
+    { name: 'Roles & Permissions', href: '/core?section=roles', key: 'roles', icon: ShieldCheck },
+    { name: 'General Settings', href: '/core?section=settings', key: 'settings', icon: Sliders },
+    { name: 'Data Privacy', href: '/core?section=privacy', key: 'privacy', icon: ShieldAlert },
+    { name: 'Workflows', href: '/core?section=workflows', key: 'workflows', icon: Cpu },
+    { name: 'Audit Logs', href: '/core?section=logs', key: 'logs', icon: Database },
+    { name: 'Licensing', href: '/core?section=licensing', key: 'licensing', icon: ShieldCheck },
   ];
 
   return (
@@ -38,11 +66,11 @@ export default function Sidebar() {
           isCollapsed ? 'justify-center' : 'gap-3'
         }`}>
           <div className="flex items-center justify-center w-8 h-8 rounded bg-slate-900 text-white font-extrabold text-sm shrink-0">
-            E
+            A
           </div>
           {!isCollapsed && (
             <div className="min-w-0">
-              <h2 className="font-extrabold text-sm text-slate-900 truncate">Atomic HR</h2>
+              <h2 className="font-extrabold text-sm text-slate-900 truncate">ABCD ERP System</h2>
               <p className="text-[10px] text-slate-400 font-medium truncate">acme-corp</p>
             </div>
           )}
@@ -70,19 +98,44 @@ export default function Sidebar() {
             const Icon = item.icon;
 
             return (
-              <Link 
-                key={item.name}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-xs font-semibold transition-all ${
-                  isActive 
-                    ? 'bg-slate-100 text-slate-900 shadow-2xs' 
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
-                } ${isCollapsed ? 'justify-center' : ''}`}
-                title={isCollapsed ? item.name : undefined}
-              >
-                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
-                {!isCollapsed && <span>{item.name}</span>}
-              </Link>
+              <React.Fragment key={item.name}>
+                <Link 
+                  href={item.href}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-xs font-semibold transition-all ${
+                    isActive 
+                      ? 'bg-slate-100 text-slate-900 shadow-2xs' 
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                  } ${isCollapsed ? 'justify-center' : ''}`}
+                  title={isCollapsed ? item.name : undefined}
+                >
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-indigo-650' : 'text-slate-400'}`} />
+                  {!isCollapsed && <span>{item.name}</span>}
+                </Link>
+
+                {/* Render Core submodules if active & not collapsed */}
+                {item.name === 'Core Setup' && isActive && !isCollapsed && (
+                  <div className="pl-4 pr-1 py-0.5 space-y-0.5 border-l border-slate-200 ml-5 mt-1 mb-2 flex flex-col">
+                    {coreSubItems.map((sub) => {
+                      const isSubActive = activeSection === sub.key;
+                      const SubIcon = sub.icon;
+                      return (
+                        <Link
+                          key={sub.name}
+                          href={sub.href}
+                          className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded text-[11px] font-semibold transition-all ${
+                            isSubActive 
+                              ? 'bg-indigo-50 text-indigo-700 shadow-3xs' 
+                              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-750'
+                          }`}
+                        >
+                          <SubIcon className={`w-3.5 h-3.5 shrink-0 ${isSubActive ? 'text-indigo-600' : 'text-slate-400'}`} />
+                          <span>{sub.name}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </React.Fragment>
             );
           })}
         </nav>

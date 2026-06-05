@@ -21,6 +21,9 @@ model Tenant {
   documents      EmployeeDocument[]
   consentLogs    ConsentLog[]
   auditLogs      AuditLog[]
+  people         Person[]
+  users          User[]
+  roles          Role[]
 
   @@map("tenants")
 }
@@ -68,21 +71,38 @@ model Department {
   @@map("departments")
 }
 
+model Person {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  firstName     String    @map("first_name") @db.VarChar(100)
+  lastName      String    @map("last_name") @db.VarChar(100)
+  middleName    String?   @map("middle_name") @db.VarChar(100)
+  personalEmail String?   @map("personal_email") @db.VarChar(150)
+  phone         String?   @db.VarChar(50)
+  birthDate     DateTime? @map("birth_date") @db.Date
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee      Employee?
+  user          User?
+
+  @@map("people")
+}
+
 model Employee {
   id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  personId         String             @unique @map("person_id") @db.Uuid
   tenantId         String             @map("tenant_id") @db.Uuid
   branchId         String?            @map("branch_id") @db.Uuid
   departmentId     String?            @map("department_id") @db.Uuid
   employeeCode     String             @map("employee_code") @db.VarChar(50)
-  firstName        String             @map("first_name") @db.VarChar(100)
-  lastName         String             @map("last_name") @db.VarChar(100)
-  workEmail        String?            @unique @map("work_email") @db.VarChar(150)
   employmentStatus String?            @default("Active") @map("employment_status") @db.VarChar(50)
   payGroup         String?            @default("Standard") @map("pay_group") @db.VarChar(50)
   customAttributes Json?              @default("{}") @map("custom_attributes")
   createdAt        DateTime?          @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime?          @default(now()) @map("updated_at") @db.Timestamptz(6)
 
+  person           Person             @relation(fields: [personId], references: [id], onDelete: Cascade)
   tenant           Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branch           Branch?            @relation(fields: [branchId], references: [id])
   department       Department?        @relation("EmpDept", fields: [departmentId], references: [id])
@@ -95,6 +115,99 @@ model Employee {
 
   @@unique([tenantId, employeeCode])
   @@map("employees")
+}
+
+model User {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  personId     String     @unique @map("person_id") @db.Uuid
+  tenantId     String     @map("tenant_id") @db.Uuid
+  loginEmail   String     @unique @map("login_email") @db.VarChar(150)
+  passwordHash String?    @map("password_hash") @db.VarChar(255)
+  isActive     Boolean    @default(true) @map("is_active")
+  roleId       String?    @map("role_id") @db.Uuid
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  
+  person       Person     @relation(fields: [personId], references: [id], onDelete: Cascade)
+  tenant       Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  role         Role?      @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  userOverrides UserPermissionOverride[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String       @map("tenant_id") @db.Uuid
+  name        String       @db.VarChar(100)
+  description String?
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users       User[]
+  permissions Permission[]
+  rolePermissions RoleModulePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String   @unique @db.VarChar(100)
+  name        String   @db.VarChar(100)
+  description String?
+  roles       Role[]
+
+  @@map("permissions")
+}
+
+model SystemModule {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  category    String   @db.VarChar(50)
+  description String?
+
+  rolePermissions RoleModulePermission[]
+  userOverrides   UserPermissionOverride[]
+
+  @@map("system_modules")
+}
+
+model RoleModulePermission {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  roleId         String   @map("role_id") @db.Uuid
+  systemModuleId String   @map("system_module_id") @db.Uuid
+  
+  canRead        Boolean  @default(false) @map("can_read")
+  canCreate      Boolean  @default(false) @map("can_create")
+  canWrite       Boolean  @default(false) @map("can_write")
+  canDelete      Boolean  @default(false) @map("can_delete")
+  canPrint       Boolean  @default(false) @map("can_print")
+  canReport      Boolean  @default(false) @map("can_report")
+  canImport      Boolean  @default(false) @map("can_import")
+  canExport      Boolean  @default(false) @map("can_export")
+  canShare       Boolean  @default(false) @map("can_share")
+  canEmail       Boolean  @default(false) @map("can_email")
+
+  role           Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  systemModule   SystemModule @relation(fields: [systemModuleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, systemModuleId])
+  @@map("role_module_permissions")
+}
+
+model UserPermissionOverride {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  systemModuleId String   @map("system_module_id") @db.Uuid
+  action         String   @db.VarChar(50)
+  isAllowed      Boolean  @map("is_allowed")
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  systemModule   SystemModule @relation(fields: [systemModuleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, systemModuleId, action])
+  @@map("user_permission_overrides")
 }
 
 model LeaveBalance {

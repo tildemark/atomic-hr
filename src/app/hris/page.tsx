@@ -23,7 +23,8 @@ import {
   Users,
   Building,
   Key,
-  ShieldAlert
+  ShieldAlert,
+  ExternalLink
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,6 +60,7 @@ const INITIAL_EMPLOYEES: Employee[] = [
 
 export default function HRISDirectory() {
   const [activeModules, setActiveModules] = useState<string[]>([]);
+  const isHrisLicensed = activeModules.includes('HUMAN_RESOURCES');
   const [employees, setEmployees] = useState<Employee[]>(INITIAL_EMPLOYEES);
   
   const [selectedEmpDetail, setSelectedEmpDetail] = useState<Employee | null>(null);
@@ -194,7 +196,7 @@ export default function HRISDirectory() {
             <Users className="w-4 h-4" />
           </Link>
           <div className="flex items-center gap-1.5 text-xs text-slate-505 font-semibold">
-            <Link href="/" className="hover:text-slate-800">Atomic HR</Link>
+            <Link href="/" className="hover:text-slate-800">ABCD ERP System</Link>
             <span className="text-slate-350">/</span>
             <span className="cursor-pointer hover:text-slate-800" onClick={() => { setSelectedEmpDetail(null); setActiveTab('Roster'); }}>HRIS</span>
             {selectedEmpDetail && (
@@ -264,8 +266,25 @@ export default function HRISDirectory() {
 
       {/* MAIN CONTAINER */}
       <div className="w-full px-6 mt-6">
-        
-        {selectedEmpDetail ? (
+        {!isHrisLicensed ? (
+          <Card className="bg-white border-amber-200 rounded-xl p-8 text-center shadow-sm max-w-xl mx-auto space-y-4 mt-12">
+            <div className="w-14 h-14 bg-amber-100 border border-amber-200 rounded-full flex items-center justify-center text-amber-600 mx-auto">
+              <Lock className="w-6 h-6" />
+            </div>
+            <div className="space-y-2">
+              <CardTitle className="text-xl font-bold text-slate-900">Human Resources Module Locked</CardTitle>
+              <CardDescription className="text-sm text-slate-505">
+                Your tenant license for **acme-corp** does not contain authorization for the human resources directory module.
+              </CardDescription>
+            </div>
+            <div className="pt-2">
+              <Button className="bg-amber-600 hover:bg-amber-500 text-white rounded-lg flex items-center gap-2 mx-auto shadow-sm shadow-amber-600/10">
+                Contact Sales to Upgrade
+                <ExternalLink className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          </Card>
+        ) : selectedEmpDetail ? (
           /* DETAIL SCREEN VIEW (Employee selected) */
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">

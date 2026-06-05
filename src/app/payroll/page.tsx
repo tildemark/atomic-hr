@@ -109,7 +109,7 @@ export default function PayrollDashboard() {
             <CircleDollarSign className="w-4 h-4" />
           </Link>
           <div className="flex items-center gap-1.5 text-xs text-slate-550 font-semibold">
-            <Link href="/" className="hover:text-slate-800">Atomic HR</Link>
+            <Link href="/" className="hover:text-slate-800">ABCD ERP System</Link>
             <span className="text-slate-350">/</span>
             <span className="cursor-pointer hover:text-slate-800" onClick={() => setSelectedPayslipEmp(null)}>Payroll</span>
             {selectedPayslipEmp && (

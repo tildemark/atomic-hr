@@ -38,6 +38,7 @@ export default function UnifiedGateway() {
 
   const isTimekeepingLicensed = activeModules.includes('TIMEKEEPING');
   const isPayrollLicensed = activeModules.includes('PAYROLL');
+  const isHrisLicensed = activeModules.includes('HUMAN_RESOURCES');
 
   return (
     <div className="min-h-screen bg-[#fafbfc] text-slate-800 font-sans p-6 md:p-12">
@@ -48,13 +49,13 @@ export default function UnifiedGateway() {
       <header className="relative flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-200 pb-8 mb-12">
         <div className="flex items-center gap-3">
           <span className="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-900 text-white font-extrabold text-lg">
-            E
+            A
           </span>
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
-              Atomic HR
+              ABCD ERP System
             </h1>
-            <p className="text-sm text-slate-500">Enterprise Unified HRIS, Timekeeping & Payroll Suite</p>
+            <p className="text-sm text-slate-500">All Business Centralized Data ERP System</p>
           </div>
         </div>
 
@@ -71,7 +72,7 @@ export default function UnifiedGateway() {
               <span className="text-xs text-slate-450 font-mono">acme-corp</span>
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              Active Modules: <strong className="text-slate-700">{activeModules.join(', ') || 'HRIS Core'}</strong>
+              Active Modules: <strong className="text-slate-700">{activeModules.join(', ') || 'None'}</strong>
             </p>
           </div>
         </div>
@@ -108,7 +109,12 @@ export default function UnifiedGateway() {
 
           {/* Card 2: HRIS Directory */}
           <Link href="/hris" className="group">
-            <Card className="bg-white border-slate-250 hover:border-indigo-500 transition-all duration-200 h-full shadow-2xs group-hover:shadow-md cursor-pointer flex flex-col justify-between">
+            <Card className="bg-white border-slate-250 hover:border-indigo-500 transition-all duration-200 h-full shadow-2xs group-hover:shadow-md cursor-pointer flex flex-col justify-between relative">
+              {!isHrisLicensed && (
+                <span className="absolute top-4 right-4 bg-amber-50 text-amber-700 p-1.5 rounded-full border border-amber-500/20">
+                  <Lock className="w-3.5 h-3.5" />
+                </span>
+              )}
               <CardHeader className="space-y-3">
                 <span className="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-555/5 text-indigo-650 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                   <Users className="w-5 h-5" />
@@ -121,7 +127,7 @@ export default function UnifiedGateway() {
                 </div>
               </CardHeader>
               <CardContent className="pt-0 border-t border-slate-50 mt-4 flex items-center justify-between text-xs font-semibold text-indigo-600">
-                <span>Enter Directory</span>
+                <span>{isHrisLicensed ? 'Enter Directory' : 'Request Upgrade'}</span>
                 <ArrowRight className="w-4 h-4 translate-x-0 group-hover:translate-x-1.5 transition-transform" />
               </CardContent>
             </Card>

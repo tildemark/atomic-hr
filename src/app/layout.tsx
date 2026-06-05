@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Atomic HR",
-  description: "Unified HRIS, Timekeeping & Payroll Enterprise Suite",
+  title: "ABCD ERP System",
+  description: "All Business Centralized Data ERP System",
 };
 
 export default function RootLayout({

@@ -1,7 +1,22 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     const rawPublicKey = process.env.NEXT_PUBLIC_LICENSE_PUBLIC_KEY;
-    const licenseKey = process.env.LICENSE_KEY;
+    const { default: fs } = await import('fs');
+    const { default: path } = await import('path');
+    const licenseFilePath = path.join(process.cwd(), 'license.txt');
+    let licenseKey = '';
+
+    if (fs.existsSync(licenseFilePath)) {
+      try {
+        licenseKey = fs.readFileSync(licenseFilePath, 'utf8').trim();
+      } catch (e) {
+        console.error("Failed to read license.txt on startup:", e);
+      }
+    }
+
+    if (!licenseKey) {
+      licenseKey = process.env.LICENSE_KEY || '';
+    }
 
     if (!rawPublicKey) {
       console.error("FATAL: NEXT_PUBLIC_LICENSE_PUBLIC_KEY environment variable is not defined.");
@@ -9,7 +24,7 @@ export async function register() {
     }
 
     if (!licenseKey) {
-      console.error("FATAL: LICENSE_KEY environment variable is not defined.");
+      console.error("FATAL: LICENSE_KEY is not defined (neither in license.txt nor environment).");
       process.exit(1);
     }
 
